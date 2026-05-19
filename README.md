@@ -19,9 +19,36 @@ Construir uma API REST profissional com autenticacao, permissoes por perfil, ges
 - Jest
 - GitHub Actions
 
+## Como executar localmente
+
+```bash
+npm install
+npm run start:dev
+```
+
+A API sobe por padrao em:
+
+```text
+http://localhost:3000
+```
+
+Endpoints iniciais:
+
+- `GET /health`
+- `GET /api/docs`
+
+## Scripts
+
+```bash
+npm run lint
+npm run build
+npm test
+npm run test:e2e
+```
+
 ## Roadmap
 
-- `0.1`: setup base NestJS, configuracoes, Swagger e healthcheck.
+- `0.1`: setup base NestJS, configuracoes, Swagger e healthcheck. Em andamento na branch `feature/project-setup`.
 - `0.2`: Docker Compose, PostgreSQL, Prisma, migrations e seed.
 - `0.3`: autenticacao JWT e roles.
 - `0.4`: usuarios e permissoes.
@@ -46,4 +73,4 @@ Construir uma API REST profissional com autenticacao, permissoes por perfil, ges
 
 ## Status
 
-Repositorio inicial criado. A implementacao da API sera versionada por feature branches.
+Repositorio inicial criado. A implementacao da API esta sendo versionada por feature branches.
