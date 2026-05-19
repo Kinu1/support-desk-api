@@ -2,11 +2,11 @@
 
 API backend para uma plataforma de Help Desk / Service Desk, desenvolvida como projeto de portfolio para vagas de Desenvolvedor Backend Junior e Full Stack Junior.
 
-## X - Contexto do projeto
+## Sobre o projeto
 
-O projeto simula uma API corporativa para atendimento de chamados. A regra central e permitir que clientes abram tickets, agentes acompanhem atendimentos atribuidos a eles e administradores tenham visao operacional do sistema.
+O projeto simula uma API corporativa de atendimento de chamados. O fluxo principal permite que clientes abram tickets, agentes acompanhem atendimentos atribuidos a eles e administradores monitorem a operacao.
 
-Principais capacidades:
+## Funcionalidades principais
 
 - Autenticacao com JWT.
 - Controle de acesso por perfil: `ADMIN`, `AGENT`, `CUSTOMER`.
@@ -18,7 +18,19 @@ Principais capacidades:
 - PostgreSQL com Prisma Migrate.
 - Docker, CI e testes automatizados.
 
-## Y - Execucao da API
+## Stack
+
+- NestJS
+- TypeScript
+- Prisma
+- PostgreSQL
+- JWT
+- Docker
+- Jest
+- Supertest
+- GitHub Actions
+
+## Como executar
 
 ### Requisitos
 
@@ -42,7 +54,7 @@ JWT_ACCESS_SECRET="change_me_access_secret"
 JWT_ACCESS_EXPIRES_IN="15m"
 ```
 
-### Executar localmente
+### Rodando localmente
 
 ```bash
 npm install
@@ -52,23 +64,23 @@ npm run db:seed
 npm run start:dev
 ```
 
-URLs principais:
-
-- API: `http://localhost:3000`
-- Healthcheck: `GET /health`
-- Swagger: `GET /api/docs`
-
-### Executar com Docker Compose
+### Rodando com Docker Compose
 
 ```bash
 docker compose up --build
 ```
 
-O container da API aplica migrations pendentes antes de iniciar.
+O container da API aplica as migrations pendentes antes de iniciar.
 
-## Z - Qualidade, contrato e validacao
+### URLs principais
 
-### Scripts
+- API: `http://localhost:3000`
+- Healthcheck: `GET /health`
+- Swagger: `GET /api/docs`
+
+## Qualidade e validacao
+
+### Scripts disponiveis
 
 ```bash
 npm run lint
@@ -79,7 +91,7 @@ npm run test:cov
 npm audit
 ```
 
-### Cobertura atual
+### Cobertura de testes
 
 - Statements: `87.85%`
 - Lines: `87.28%`
@@ -101,7 +113,7 @@ O GitHub Actions executa:
 - cobertura
 - audit de dependencias
 
-### Credenciais seed
+## Credenciais de seed
 
 Todos os usuarios seed usam a senha:
 
@@ -119,20 +131,20 @@ customer@supportdesk.test
 
 ## Endpoints principais
 
-Auth:
+### Autenticacao
 
 - `POST /api/v1/auth/register-customer`
 - `POST /api/v1/auth/login`
 - `GET /api/v1/auth/me`
 
-Usuarios:
+### Usuarios
 
 - `GET /api/v1/users`
 - `GET /api/v1/users/:id`
 - `POST /api/v1/users/agents`
 - `PATCH /api/v1/users/:id/status`
 
-Tickets:
+### Tickets
 
 - `POST /api/v1/tickets`
 - `GET /api/v1/tickets`
@@ -142,18 +154,6 @@ Tickets:
 - `GET /api/v1/tickets/:id/comments`
 - `GET /api/v1/tickets/:id/events`
 
-Dashboard:
+### Dashboard
 
 - `GET /api/v1/dashboard/summary`
-
-## Stack
-
-- NestJS
-- TypeScript
-- Prisma
-- PostgreSQL
-- JWT
-- Docker
-- Jest
-- Supertest
-- GitHub Actions
