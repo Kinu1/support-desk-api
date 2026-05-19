@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - "feature/**"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate:
+    name: Validate API
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: support_desk
+          POSTGRES_PASSWORD: support_desk_password
+          POSTGRES_DB: support_desk
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U support_desk -d support_desk"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://support_desk:support_desk_password@localhost:5432/support_desk?schema=public
+      JWT_ACCESS_SECRET: test_access_secret_with_32_chars
+      JWT_ACCESS_EXPIRES_IN: 15m
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run db:generate
+
+      - name: Apply migrations
+        run: npm run db:deploy
+
+      - name: Seed database
+        run: npm run db:seed
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Unit tests
+        run: npm test
+
+      - name: E2E tests
+        run: npm run test:e2e
+
+      - name: Coverage
+        run: npm run test:cov
+
+      - name: Audit
+        run: npm audit --audit-level=moderate
