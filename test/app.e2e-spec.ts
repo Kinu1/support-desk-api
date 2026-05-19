@@ -5,6 +5,9 @@ import * as request from 'supertest';
 
 import { AppModule } from '../src/app.module';
 
+process.env.DATABASE_URL ??=
+  'postgresql://support_desk:support_desk_password@localhost:5432/support_desk?schema=public';
+
 describe('Health endpoint', () => {
   let app: INestApplication;
 
@@ -18,7 +21,7 @@ describe('Health endpoint', () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    await app?.close();
   });
 
   it('GET /health', async () => {
@@ -30,6 +33,7 @@ describe('Health endpoint', () => {
       .expect(({ body }) => {
         expect(body.status).toBe('ok');
         expect(body.service).toBe('support-desk-api');
+        expect(body.database).toBe('ok');
         expect(body.timestamp).toEqual(expect.any(String));
       });
   });

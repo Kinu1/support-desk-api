@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { appConfig } from './config/app.config';
 import { envValidationSchema } from './config/env.validation';
 import { HealthModule } from './modules/health/health.module';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { HealthModule } from './modules/health/health.module';
       load: [appConfig],
       validationSchema: envValidationSchema,
     }),
+    PrismaModule,
     HealthModule,
   ],
 })
