@@ -2,23 +2,70 @@
 
 API backend para uma plataforma de Help Desk / Service Desk, desenvolvida como projeto de portfolio para vagas de Desenvolvedor Backend Junior e Full Stack Junior.
 
-## Sobre o projeto
+## X - Contexto do projeto
 
-O projeto simula uma API corporativa de atendimento de chamados. O fluxo principal permite que clientes abram tickets, agentes acompanhem atendimentos atribuidos a eles e administradores monitorem a operacao.
+Este projeto simula uma API corporativa para operacao de suporte tecnico. O objetivo e representar um backend com regras de negocio reais para abertura, acompanhamento e gestao de chamados.
 
-## Funcionalidades principais
+O fluxo principal do sistema foi pensado para tres perfis:
+
+- `CUSTOMER`: abre e acompanha os proprios tickets.
+- `AGENT`: atende, atualiza e comenta tickets atribuidos.
+- `ADMIN`: gerencia usuarios, agentes e acompanha a operacao de forma consolidada.
+
+O projeto foi estruturado para demonstrar fundamentos cobrados com frequencia em vagas junior de backend e full stack:
+
+- autenticacao e autorizacao com JWT
+- separacao de responsabilidades por perfil
+- modelagem relacional com PostgreSQL
+- persistencia com Prisma
+- validacao de entrada
+- testes automatizados
+- ambiente reproduzivel com Docker
+- pipeline de CI no GitHub Actions
+
+## Y - O que a API entrega
+
+### Funcionalidades principais
 
 - Autenticacao com JWT.
 - Controle de acesso por perfil: `ADMIN`, `AGENT`, `CUSTOMER`.
+- Cadastro de cliente e login.
 - Gestao de usuarios e agentes.
 - Criacao, listagem, consulta e atualizacao de tickets.
 - Comentarios publicos e internos.
 - Historico automatico de eventos do ticket.
 - Dashboard operacional com metricas por status, urgencia e resolucao.
-- PostgreSQL com Prisma Migrate.
-- Docker, CI e testes automatizados.
 
-## Stack
+### Endpoints principais
+
+#### Autenticacao
+
+- `POST /api/v1/auth/register-customer`
+- `POST /api/v1/auth/login`
+- `GET /api/v1/auth/me`
+
+#### Usuarios
+
+- `GET /api/v1/users`
+- `GET /api/v1/users/:id`
+- `POST /api/v1/users/agents`
+- `PATCH /api/v1/users/:id/status`
+
+#### Tickets
+
+- `POST /api/v1/tickets`
+- `GET /api/v1/tickets`
+- `GET /api/v1/tickets/:id`
+- `PATCH /api/v1/tickets/:id`
+- `POST /api/v1/tickets/:id/comments`
+- `GET /api/v1/tickets/:id/comments`
+- `GET /api/v1/tickets/:id/events`
+
+#### Dashboard
+
+- `GET /api/v1/dashboard/summary`
+
+### Stack utilizada
 
 - NestJS
 - TypeScript
@@ -30,7 +77,7 @@ O projeto simula uma API corporativa de atendimento de chamados. O fluxo princip
 - Supertest
 - GitHub Actions
 
-## Como executar
+## Z - Como executar e validar
 
 ### Requisitos
 
@@ -54,7 +101,7 @@ JWT_ACCESS_SECRET="change_me_access_secret"
 JWT_ACCESS_EXPIRES_IN="15m"
 ```
 
-### Rodando localmente
+### Execucao local
 
 ```bash
 npm install
@@ -64,7 +111,7 @@ npm run db:seed
 npm run start:dev
 ```
 
-### Rodando com Docker Compose
+### Execucao com Docker
 
 ```bash
 docker compose up --build
@@ -78,9 +125,9 @@ O container da API aplica as migrations pendentes antes de iniciar.
 - Healthcheck: `GET /health`
 - Swagger: `GET /api/docs`
 
-## Qualidade e validacao
+### Qualidade e validacao
 
-### Scripts disponiveis
+Scripts disponiveis:
 
 ```bash
 npm run lint
@@ -91,7 +138,7 @@ npm run test:cov
 npm audit
 ```
 
-### Cobertura de testes
+Cobertura atual:
 
 - Statements: `87.85%`
 - Lines: `87.28%`
@@ -102,18 +149,18 @@ npm audit
 
 O GitHub Actions executa:
 
-- install com `npm ci`
-- Prisma generate
-- migrations
-- seed
-- lint
-- build
-- testes unitarios
-- testes e2e
-- cobertura
-- audit de dependencias
+- `npm ci`
+- `prisma generate`
+- `prisma migrate deploy`
+- `prisma db seed`
+- `npm run lint`
+- `npm run build`
+- `npm test`
+- `npm run test:e2e`
+- `npm run test:cov`
+- `npm audit --audit-level=moderate`
 
-## Credenciais de seed
+### Credenciais de seed
 
 Todos os usuarios seed usam a senha:
 
@@ -121,39 +168,10 @@ Todos os usuarios seed usam a senha:
 Password123!
 ```
 
-Usuarios:
+Usuarios disponiveis:
 
 ```text
 admin@supportdesk.test
 agent@supportdesk.test
 customer@supportdesk.test
 ```
-
-## Endpoints principais
-
-### Autenticacao
-
-- `POST /api/v1/auth/register-customer`
-- `POST /api/v1/auth/login`
-- `GET /api/v1/auth/me`
-
-### Usuarios
-
-- `GET /api/v1/users`
-- `GET /api/v1/users/:id`
-- `POST /api/v1/users/agents`
-- `PATCH /api/v1/users/:id/status`
-
-### Tickets
-
-- `POST /api/v1/tickets`
-- `GET /api/v1/tickets`
-- `GET /api/v1/tickets/:id`
-- `PATCH /api/v1/tickets/:id`
-- `POST /api/v1/tickets/:id/comments`
-- `GET /api/v1/tickets/:id/comments`
-- `GET /api/v1/tickets/:id/events`
-
-### Dashboard
-
-- `GET /api/v1/dashboard/summary`
