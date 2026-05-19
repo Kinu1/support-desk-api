@@ -5,39 +5,43 @@ import {
   TicketStatus,
   UserRole,
 } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
+const DEMO_PASSWORD = 'Password123!';
 
 async function main() {
+  const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
+
   const admin = await prisma.user.upsert({
     where: { email: 'admin@supportdesk.test' },
-    update: {},
+    update: { passwordHash, role: UserRole.ADMIN, isActive: true },
     create: {
       name: 'Admin Support Desk',
       email: 'admin@supportdesk.test',
-      passwordHash: '$2b$10$seed.hash.placeholder.admin',
+      passwordHash,
       role: UserRole.ADMIN,
     },
   });
 
   const agent = await prisma.user.upsert({
     where: { email: 'agent@supportdesk.test' },
-    update: {},
+    update: { passwordHash, role: UserRole.AGENT, isActive: true },
     create: {
       name: 'Support Agent',
       email: 'agent@supportdesk.test',
-      passwordHash: '$2b$10$seed.hash.placeholder.agent',
+      passwordHash,
       role: UserRole.AGENT,
     },
   });
 
   const customer = await prisma.user.upsert({
     where: { email: 'customer@supportdesk.test' },
-    update: {},
+    update: { passwordHash, role: UserRole.CUSTOMER, isActive: true },
     create: {
       name: 'Customer Demo',
       email: 'customer@supportdesk.test',
-      passwordHash: '$2b$10$seed.hash.placeholder.customer',
+      passwordHash,
       role: UserRole.CUSTOMER,
     },
   });
