@@ -1,6 +1,6 @@
 {
   "name": "support-desk-api",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Backend API for a Help Desk / Service Desk portfolio project.",
   "private": false,
   "license": "MIT",
@@ -17,7 +17,8 @@
     "start:dev": "nest start --watch",
     "start:prod": "node dist/src/main.js",
     "test": "jest",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:cov": "jest --coverage",
+    "test:e2e": "jest --config ./test/jest-e2e.json --runInBand"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.9",
@@ -70,9 +71,25 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "common/filters/**/*.ts",
+      "common/guards/**/*.ts",
+      "modules/**/*.service.ts"
     ],
     "coverageDirectory": "../coverage",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "\\.module\\.ts$",
+      "\\.dto\\.ts$",
+      "main\\.ts$"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 65,
+        "functions": 75,
+        "lines": 80,
+        "statements": 80
+      }
+    },
     "testEnvironment": "node"
   }
 }

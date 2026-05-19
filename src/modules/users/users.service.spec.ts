@@ -1,4 +1,4 @@
-import { ForbiddenException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
@@ -67,5 +67,121 @@ describe('UsersService', () => {
         role: 'AGENT',
       },
     });
+  });
+
+  it('lists users with pagination metadata', async () => {
+    const prisma = {
+      $transaction: jest.fn().mockResolvedValue([[user], 1]),
+      user: {
+        findMany: jest.fn(),
+        count: jest.fn(),
+      },
+    };
+    const service = new UsersService(prisma as never);
+
+    await expect(
+      service.listUsers({
+        role: UserRole.CUSTOMER,
+        isActive: true,
+        page: 1,
+        limit: 20,
+      }),
+    ).resolves.toEqual({
+      data: [
+        {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          isActive: true,
+          createdAt: now.toISOString(),
+          updatedAt: now.toISOString(),
+        },
+      ],
+      meta: {
+        page: 1,
+        limit: 20,
+        total: 1,
+        totalPages: 1,
+      },
+    });
+    expect(prisma.user.findMany).toHaveBeenCalledWith({
+      where: { role: UserRole.CUSTOMER, isActive: true },
+      orderBy: { createdAt: 'desc' },
+      skip: 0,
+      take: 20,
+    });
+  });
+
+  it('allows admins to read any existing user', async () => {
+    const prisma = {
+      user: {
+        findUnique: jest.fn().mockResolvedValue(user),
+      },
+    };
+    const service = new UsersService(prisma as never);
+
+    await expect(
+      service.getUserById('user-id', {
+        sub: 'admin-id',
+        email: 'admin@example.com',
+        role: UserRole.ADMIN,
+      }),
+    ).resolves.toMatchObject({ id: 'user-id', email: user.email });
+  });
+
+  it('throws not found when user does not exist', async () => {
+    const prisma = {
+      user: {
+        findUnique: jest.fn().mockResolvedValue(null),
+      },
+    };
+    const service = new UsersService(prisma as never);
+
+    await expect(
+      service.getUserById('missing-id', {
+        sub: 'admin-id',
+        email: 'admin@example.com',
+        role: UserRole.ADMIN,
+      }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('prevents admins from deactivating their own account', async () => {
+    const service = new UsersService({} as never);
+
+    await expect(
+      service.updateUserStatus(
+        'admin-id',
+        { isActive: false },
+        {
+          sub: 'admin-id',
+          email: 'admin@example.com',
+          role: UserRole.ADMIN,
+        },
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('updates another user status', async () => {
+    const prisma = {
+      user: {
+        findUnique: jest.fn().mockResolvedValue({ id: 'user-id' }),
+        update: jest.fn().mockResolvedValue({ ...user, isActive: false }),
+      },
+    };
+    const service = new UsersService(prisma as never);
+
+    await expect(
+      service.updateUserStatus(
+        'user-id',
+        { isActive: false },
+        {
+          sub: 'admin-id',
+          email: 'admin@example.com',
+          role: UserRole.ADMIN,
+        },
+      ),
+    ).resolves.toMatchObject({ id: 'user-id', isActive: false });
   });
 });

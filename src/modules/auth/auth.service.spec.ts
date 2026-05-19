@@ -1,3 +1,4 @@
+import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { UserRole } from '@prisma/client';
@@ -69,5 +70,79 @@ describe('AuthService', () => {
     expect(prisma.user.findUnique).toHaveBeenCalledWith({
       where: { email: 'customer@example.com' },
     });
+  });
+
+  it('registers a customer with normalized email', async () => {
+    jest.spyOn(bcrypt, 'hash').mockResolvedValue('$2b$10$new-hash' as never);
+
+    const prisma = {
+      user: {
+        findUnique: jest.fn().mockResolvedValue(null),
+        create: jest.fn().mockResolvedValue({
+          ...user,
+          email: 'new@example.com',
+          passwordHash: '$2b$10$new-hash',
+        }),
+      },
+    };
+    const service = new AuthService(prisma as never, jwtService, configService);
+
+    await expect(
+      service.registerCustomer({
+        name: 'New Customer',
+        email: 'NEW@example.com',
+        password: 'Password123!',
+      }),
+    ).resolves.toMatchObject({
+      accessToken: 'access-token',
+      user: {
+        email: 'new@example.com',
+        role: UserRole.CUSTOMER,
+      },
+    });
+    expect(prisma.user.create).toHaveBeenCalledWith({
+      data: {
+        name: 'New Customer',
+        email: 'new@example.com',
+        passwordHash: '$2b$10$new-hash',
+        role: UserRole.CUSTOMER,
+      },
+    });
+  });
+
+  it('rejects duplicated customer email on registration', async () => {
+    const prisma = {
+      user: {
+        findUnique: jest.fn().mockResolvedValue({ id: 'existing-id' }),
+      },
+    };
+    const service = new AuthService(prisma as never, jwtService, configService);
+
+    await expect(
+      service.registerCustomer({
+        name: 'Existing Customer',
+        email: 'customer@example.com',
+        password: 'Password123!',
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('rejects inactive users on login and me lookup', async () => {
+    const prisma = {
+      user: {
+        findUnique: jest.fn().mockResolvedValue({ ...user, isActive: false }),
+      },
+    };
+    const service = new AuthService(prisma as never, jwtService, configService);
+
+    await expect(
+      service.login({
+        email: 'customer@example.com',
+        password: 'Password123!',
+      }),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+    await expect(service.me('user-id')).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
   });
 });
