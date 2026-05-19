@@ -425,5 +425,34 @@ describe('Health endpoint', () => {
     expect(adminList.body.data).toEqual(
       expect.arrayContaining([expect.objectContaining({ id: ticketId })]),
     );
+
+    const adminDashboard = await request(server)
+      .get('/api/v1/dashboard/summary')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+
+    expect(adminDashboard.body.totalTickets).toBeGreaterThanOrEqual(1);
+    expect(adminDashboard.body.byStatus).toEqual(
+      expect.objectContaining({
+        OPEN: expect.any(Number),
+        IN_PROGRESS: expect.any(Number),
+        WAITING_CUSTOMER: expect.any(Number),
+        RESOLVED: expect.any(Number),
+        CLOSED: expect.any(Number),
+      }),
+    );
+
+    const agentDashboard = await request(server)
+      .get('/api/v1/dashboard/summary')
+      .set('Authorization', `Bearer ${agentToken}`)
+      .expect(200);
+
+    expect(agentDashboard.body.scope).toBe('AGENT');
+    expect(agentDashboard.body.totalTickets).toBeGreaterThanOrEqual(1);
+
+    await request(server)
+      .get('/api/v1/dashboard/summary')
+      .set('Authorization', `Bearer ${customerToken}`)
+      .expect(403);
   });
 });
