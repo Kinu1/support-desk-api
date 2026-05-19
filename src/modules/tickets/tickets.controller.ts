@@ -20,9 +20,12 @@ import {
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AuthenticatedUser } from '../../common/types/auth.types';
+import { CreateTicketCommentDto } from './dto/create-ticket-comment.dto';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { ListTicketsQueryDto } from './dto/list-tickets-query.dto';
 import { PaginatedTicketsResponseDto } from './dto/paginated-tickets-response.dto';
+import { TicketCommentResponseDto } from './dto/ticket-comment-response.dto';
+import { TicketEventResponseDto } from './dto/ticket-event-response.dto';
 import { TicketResponseDto } from './dto/ticket-response.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { TicketsService } from './tickets.service';
@@ -65,6 +68,37 @@ export class TicketsController {
     @CurrentUser() currentUser: AuthenticatedUser,
   ) {
     return this.ticketsService.getTicketById(id, currentUser);
+  }
+
+  @Get(':id/comments')
+  @ApiOkResponse({ type: [TicketCommentResponseDto] })
+  @ApiForbiddenResponse({ description: 'Ticket is outside user scope.' })
+  listComments(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ) {
+    return this.ticketsService.listComments(id, currentUser);
+  }
+
+  @Post(':id/comments')
+  @ApiCreatedResponse({ type: TicketCommentResponseDto })
+  @ApiForbiddenResponse({ description: 'Ticket is outside user scope.' })
+  createComment(
+    @Param('id') id: string,
+    @Body() dto: CreateTicketCommentDto,
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ) {
+    return this.ticketsService.createComment(id, dto, currentUser);
+  }
+
+  @Get(':id/events')
+  @ApiOkResponse({ type: [TicketEventResponseDto] })
+  @ApiForbiddenResponse({ description: 'Ticket is outside user scope.' })
+  listEvents(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ) {
+    return this.ticketsService.listEvents(id, currentUser);
   }
 
   @Patch(':id')

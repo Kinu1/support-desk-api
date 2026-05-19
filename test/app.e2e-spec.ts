@@ -340,6 +340,83 @@ describe('Health endpoint', () => {
     expect(adminUpdate.body.status).toBe('RESOLVED');
     expect(adminUpdate.body.resolvedAt).toEqual(expect.any(String));
 
+    await request(server)
+      .post(`/api/v1/tickets/${ticketId}/comments`)
+      .set('Authorization', `Bearer ${customerToken}`)
+      .send({
+        body: 'Ainda estou aguardando retorno.',
+        isInternal: true,
+      })
+      .expect(403);
+
+    const publicComment = await request(server)
+      .post(`/api/v1/tickets/${ticketId}/comments`)
+      .set('Authorization', `Bearer ${customerToken}`)
+      .send({
+        body: 'Ainda estou aguardando retorno.',
+      })
+      .expect(201);
+
+    expect(publicComment.body).toMatchObject({
+      ticketId,
+      isInternal: false,
+      body: 'Ainda estou aguardando retorno.',
+    });
+
+    const internalComment = await request(server)
+      .post(`/api/v1/tickets/${ticketId}/comments`)
+      .set('Authorization', `Bearer ${agentToken}`)
+      .send({
+        body: 'Cliente confirmou que o problema continua.',
+        isInternal: true,
+      })
+      .expect(201);
+
+    expect(internalComment.body.isInternal).toBe(true);
+
+    const customerComments = await request(server)
+      .get(`/api/v1/tickets/${ticketId}/comments`)
+      .set('Authorization', `Bearer ${customerToken}`)
+      .expect(200);
+
+    expect(customerComments.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: publicComment.body.id }),
+      ]),
+    );
+    expect(customerComments.body).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: internalComment.body.id }),
+      ]),
+    );
+
+    const agentComments = await request(server)
+      .get(`/api/v1/tickets/${ticketId}/comments`)
+      .set('Authorization', `Bearer ${agentToken}`)
+      .expect(200);
+
+    expect(agentComments.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: publicComment.body.id }),
+        expect.objectContaining({ id: internalComment.body.id }),
+      ]),
+    );
+
+    const events = await request(server)
+      .get(`/api/v1/tickets/${ticketId}/events`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+
+    expect(events.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: 'CREATED' }),
+        expect.objectContaining({ type: 'STATUS_CHANGED' }),
+        expect.objectContaining({ type: 'PRIORITY_CHANGED' }),
+        expect.objectContaining({ type: 'ASSIGNED' }),
+        expect.objectContaining({ type: 'COMMENTED' }),
+      ]),
+    );
+
     const adminList = await request(server)
       .get(`/api/v1/tickets?customerId=${customerRegister.body.user.id}&page=1&limit=10`)
       .set('Authorization', `Bearer ${adminToken}`)

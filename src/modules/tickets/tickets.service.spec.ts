@@ -40,10 +40,18 @@ describe('TicketsService', () => {
   });
 
   it('creates a ticket for the authenticated customer', async () => {
-    const prisma = {
+    const tx = {
       ticket: {
         create: jest.fn().mockResolvedValue(ticket),
       },
+      ticketEvent: {
+        create: jest.fn().mockResolvedValue({}),
+      },
+    };
+    const prisma = {
+      $transaction: jest.fn((callback: (txClient: typeof tx) => Promise<unknown>) =>
+        callback(tx),
+      ),
     };
     const service = new TicketsService(prisma as never);
 
@@ -66,13 +74,22 @@ describe('TicketsService', () => {
       customerId: 'customer-id',
       status: TicketStatus.OPEN,
     });
-    expect(prisma.ticket.create).toHaveBeenCalledWith({
+    expect(tx.ticket.create).toHaveBeenCalledWith({
       data: {
         title: ticket.title,
         description: ticket.description,
         category: ticket.category,
         priority: TicketPriority.MEDIUM,
         customerId: 'customer-id',
+      },
+    });
+    expect(tx.ticketEvent.create).toHaveBeenCalledWith({
+      data: {
+        ticketId: 'ticket-id',
+        actorId: 'customer-id',
+        type: 'CREATED',
+        field: 'status',
+        newValue: TicketStatus.OPEN,
       },
     });
   });
@@ -91,6 +108,30 @@ describe('TicketsService', () => {
         email: 'other@example.com',
         role: UserRole.CUSTOMER,
       }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('blocks customers from creating internal comments', async () => {
+    const prisma = {
+      ticket: {
+        findUnique: jest.fn().mockResolvedValue(ticket),
+      },
+    };
+    const service = new TicketsService(prisma as never);
+
+    await expect(
+      service.createComment(
+        'ticket-id',
+        {
+          body: 'Internal note',
+          isInternal: true,
+        },
+        {
+          sub: 'customer-id',
+          email: 'customer@example.com',
+          role: UserRole.CUSTOMER,
+        },
+      ),
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 });
