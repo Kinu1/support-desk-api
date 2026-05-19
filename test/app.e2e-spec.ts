@@ -215,4 +215,138 @@ describe('Health endpoint', () => {
       .send({ email: agentEmail, password })
       .expect(401);
   });
+
+  it('manages tickets with customer, agent and admin permissions', async () => {
+    const server = app.getHttpServer() as Server;
+    const stamp = Date.now();
+    const customerEmail = `customer.ticket.${stamp}@example.com`;
+    const otherCustomerEmail = `customer.other-ticket.${stamp}@example.com`;
+    const agentEmail = `agent.ticket.${stamp}@example.com`;
+
+    const adminLogin = await request(server)
+      .post('/api/v1/auth/login')
+      .send({
+        email: 'admin.e2e@supportdesk.test',
+        password,
+      })
+      .expect(200);
+    const adminToken = adminLogin.body.accessToken as string;
+
+    const agentResponse = await request(server)
+      .post('/api/v1/users/agents')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        name: 'Agent Ticket',
+        email: agentEmail,
+        password,
+      })
+      .expect(201);
+    const agentId = agentResponse.body.id as string;
+
+    const agentLogin = await request(server)
+      .post('/api/v1/auth/login')
+      .send({ email: agentEmail, password })
+      .expect(200);
+    const agentToken = agentLogin.body.accessToken as string;
+
+    const customerRegister = await request(server)
+      .post('/api/v1/auth/register-customer')
+      .send({
+        name: 'Customer Ticket',
+        email: customerEmail,
+        password,
+      })
+      .expect(201);
+    const customerToken = customerRegister.body.accessToken as string;
+
+    const otherCustomerRegister = await request(server)
+      .post('/api/v1/auth/register-customer')
+      .send({
+        name: 'Other Customer Ticket',
+        email: otherCustomerEmail,
+        password,
+      })
+      .expect(201);
+    const otherCustomerToken = otherCustomerRegister.body.accessToken as string;
+
+    const ticketResponse = await request(server)
+      .post('/api/v1/tickets')
+      .set('Authorization', `Bearer ${customerToken}`)
+      .send({
+        title: 'Nao consigo acessar o painel',
+        description: 'O login retorna erro mesmo com a senha correta.',
+        category: 'access',
+        priority: 'HIGH',
+      })
+      .expect(201);
+    const ticketId = ticketResponse.body.id as string;
+
+    expect(ticketResponse.body).toMatchObject({
+      status: 'OPEN',
+      priority: 'HIGH',
+      category: 'access',
+      agentId: null,
+    });
+
+    await request(server)
+      .post('/api/v1/tickets')
+      .set('Authorization', `Bearer ${agentToken}`)
+      .send({
+        title: 'Agente tentando criar ticket',
+        description: 'Agente nao deve criar ticket de cliente.',
+        category: 'access',
+      })
+      .expect(403);
+
+    await request(server)
+      .get(`/api/v1/tickets/${ticketId}`)
+      .set('Authorization', `Bearer ${otherCustomerToken}`)
+      .expect(403);
+
+    const agentUpdate = await request(server)
+      .patch(`/api/v1/tickets/${ticketId}`)
+      .set('Authorization', `Bearer ${agentToken}`)
+      .send({
+        status: 'IN_PROGRESS',
+        priority: 'URGENT',
+      })
+      .expect(200);
+
+    expect(agentUpdate.body).toMatchObject({
+      id: ticketId,
+      status: 'IN_PROGRESS',
+      priority: 'URGENT',
+      agentId,
+    });
+
+    const agentList = await request(server)
+      .get('/api/v1/tickets?status=IN_PROGRESS&page=1&limit=10')
+      .set('Authorization', `Bearer ${agentToken}`)
+      .expect(200);
+
+    expect(agentList.body.data).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: ticketId })]),
+    );
+
+    const adminUpdate = await request(server)
+      .patch(`/api/v1/tickets/${ticketId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        status: 'RESOLVED',
+        agentId,
+      })
+      .expect(200);
+
+    expect(adminUpdate.body.status).toBe('RESOLVED');
+    expect(adminUpdate.body.resolvedAt).toEqual(expect.any(String));
+
+    const adminList = await request(server)
+      .get(`/api/v1/tickets?customerId=${customerRegister.body.user.id}&page=1&limit=10`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+
+    expect(adminList.body.data).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: ticketId })]),
+    );
+  });
 });
