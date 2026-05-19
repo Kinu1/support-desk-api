@@ -2,7 +2,7 @@
 
 API backend para uma plataforma de Help Desk / Service Desk, desenvolvida como projeto de portfolio para vagas de Desenvolvedor Backend Junior e Full Stack Junior.
 
-## X - Contexto do projeto
+## Contexto do projeto
 
 Este projeto simula uma API corporativa para operacao de suporte tecnico. O objetivo e representar um backend com regras de negocio reais para abertura, acompanhamento e gestao de chamados.
 
@@ -23,7 +23,7 @@ O projeto foi estruturado para demonstrar fundamentos cobrados com frequencia em
 - ambiente reproduzivel com Docker
 - pipeline de CI no GitHub Actions
 
-## Y - O que a API entrega
+## O que a API entrega
 
 ### Funcionalidades principais
 
@@ -77,7 +77,7 @@ O projeto foi estruturado para demonstrar fundamentos cobrados com frequencia em
 - Supertest
 - GitHub Actions
 
-## Z - Como executar e validar
+## Como executar e validar
 
 ### Requisitos
 
