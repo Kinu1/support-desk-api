@@ -12,7 +12,7 @@ O fluxo principal do sistema foi pensado para tres perfis:
 - `AGENT`: atende, atualiza e comenta tickets atribuidos.
 - `ADMIN`: gerencia usuarios, agentes e acompanha a operacao de forma consolidada.
 
-O projeto foi estruturado para demonstrar fundamentos cobrados com frequencia em vagas junior de backend e full stack:
+O projeto foi estruturado para demonstrar fundamentos de backend:
 
 - autenticacao e autorizacao com JWT
 - separacao de responsabilidades por perfil
